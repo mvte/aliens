@@ -19,6 +19,9 @@ class Game:
             case State.RUNNING:
                 self._handle_running()
                 pass
+            case State.TRANSITION:
+                self._handle_transition()
+                pass
     
 
     def change_state(self, new_state):
@@ -37,7 +40,13 @@ class Game:
 
 
 class State(Enum):
+    # sets up the game as per the config
     INITIALIZING  = 1
+    # ready to start the game
     READY = 2
+    # game is running
     RUNNING = 3
-    DONE = 4
+    # in the case of certain configurations, the game may need to modify its configuration
+    TRANSITION = 4
+    # game is done
+    DONE = 5
