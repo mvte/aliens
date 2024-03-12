@@ -1,8 +1,10 @@
 from enum import Enum
+from .ship import Ship, Node
 
 class Game:
     config = None
     state = None
+    ship = None
     def __init__(self, config):
         self.config = config
         self.state = State.INITIALIZING
@@ -31,7 +33,9 @@ class Game:
     def _handle_initializing(self):
         print("initializing")
         print(self.config)
+        self.ship = Ship(self.config["dim"])
         self.state = State.READY
+
 
     def _handle_ready(self):
         print("ready")
