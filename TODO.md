@@ -1,0 +1,2 @@
+- parse json file in main
+- create simulation class to handle multiple simulations
