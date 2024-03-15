@@ -1,2 +1,2 @@
-- parse json file in main
-- create simulation class to handle multiple simulations
+- send bot beeps and sensor alerts per step
+- finish implementation logic of bot 1
