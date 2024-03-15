@@ -8,6 +8,7 @@ if a node is False, then that node is closed and these^ cannot move into it
 '''
 class Ship:
     board = None
+    dim = None
 
     def __init__(self, dim):
         print("creating ship")
@@ -20,17 +21,30 @@ class Ship:
                     tempBoard[i][j] = Node.CLOSED
         
         self.board = tempBoard
-    
-    def get_ship(self):
+        self.dim = dim
+
+    def getShip(self):
         return self.board
+    
+
+    def getValidMoves(self, pos):
+        x, y = pos
+        dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        validMoves = []
+        for dir in dirs:
+            dx, dy = dir
+            if x + dx < 0 or x + dx >= len(self.board) or y + dy < 0 or y + dy >= len(self.board):
+                continue
+            if self.board[x + dx][y + dy] == Node.OPEN:
+                validMoves.append((x + dx, y + dy))
+        return validMoves
     
 
 class Node(Enum):
     OPEN = 1
     CLOSED = 2
     ALIEN = 3
-    CREWMATE = 4
-    BOT = 5
+    
 
 '''
 1. Choose a square at random
