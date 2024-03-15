@@ -1,10 +1,10 @@
 from enum import Enum
-from .ship import Ship, Node
+from .simulation import Simulation
 
 class Game:
     config = None
     state = None
-    ship = None
+    sims = []
     def __init__(self, config):
         self.config = config
         self.state = State.INITIALIZING
@@ -33,15 +33,31 @@ class Game:
     def _handle_initializing(self):
         print("initializing")
         print(self.config)
-        self.ship = Ship(self.config["dim"])
+        for _ in range(self.config["concurrentSims"]):
+            self.sims.append(Simulation(self.config))
+
         self.state = State.READY
 
 
     def _handle_ready(self):
         print("ready")
+        self.state = State.RUNNING
+
+
+    def _handle_running(self):
+        finished = True
+        for sim in self.sims:
+            sim.step()
+            finished = finished and sim.finished
+        
+        if finished:
+            self.state = State.TRANSITION
+    
+
+    def _handle_transition(self):
+        print("transitioning")
         self.state = State.DONE
-
-
+        
 
 class State(Enum):
     # sets up the game as per the config
