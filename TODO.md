@@ -1,2 +1,3 @@
 - send bot beeps and sensor alerts per step
 - finish implementation logic of bot 1
+- show probability maps for bots in visualization (another heatmap)
