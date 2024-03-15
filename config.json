@@ -1,5 +1,9 @@
 {
     "dim": 35,
     "aliens": 1,
-    "crewmates": 1
+    "crewmates": 1,
+    "bot": 1,
+    "sims": 1,
+    "concurrentSims": 1,
+    "k": 1
 }
