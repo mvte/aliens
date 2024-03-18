@@ -1,3 +1,8 @@
-- send bot beeps and sensor alerts per step
+- send bot beeps and sensor alerts per step (done)
 - finish implementation logic of bot 1
+    - use insights from class about temporal models and belief to find probability maps
+    - maybe consider a state based approach to the bot
+        - data collection (listen for beeps from various locations, consider "anchoring" to certain parts of the board)
+        - alien detected (evade)
+        - goto crewmate (high confidence in crewmate's position)
 - show probability maps for bots in visualization (another heatmap)
