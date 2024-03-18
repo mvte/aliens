@@ -2,6 +2,7 @@ from .ship import Ship, Node
 from .bot_factory import botFactory
 from .agents.crewmate import Crewmate
 from .agents.alien import Alien
+import math
 import random
 
 class Simulation:
@@ -42,7 +43,7 @@ class Simulation:
         bot = botFactory(whichBot, self.ship)
 
         x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-        while not self.ship.board[x][y] == Node.CLOSED:
+        while self.ship.board[x][y] == Node.CLOSED:
             x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
 
         bot.pos = (x, y)
@@ -53,7 +54,7 @@ class Simulation:
     def _placeCrewmates(self, numCrewmates):
         for i in range(numCrewmates):
             x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-            while not self.ship.board[x][y] == Node.CLOSED and not self.bot.pos == (x, y):
+            while self.ship.board[x][y] == Node.CLOSED or self.bot.pos == (x, y):
                 x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
 
             self.crewmates.add(Crewmate((x, y)))
@@ -65,7 +66,7 @@ class Simulation:
 
         for i in range(numAliens):
             x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-            while not self.ship.board[x][y] == Node.CLOSED and not self._isWithinSensorRange(botPos, (x, y)):
+            while self.ship.board[x][y] == Node.CLOSED or self._isWithinSensorRange(botPos, (x, y)):
                 x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
 
             self.aliens.add(Alien((x, y)))
@@ -81,21 +82,34 @@ class Simulation:
         return abs(botX - alienX) <= k and abs(botY - alienY) <= k
     
 
+    def _getManhattanDistance(self, pos1, pos2):
+        x1, y1 = pos1
+        x2, y2 = pos2
+        return abs(x1 - x2) + abs(y1 - y2)
+
     # TODO: implement the simulation logic
     def step(self):
         if self.finished:
             return
         
-        if self.steps == self.MAX_STEPS:
-            print("max steps reached")
-            self.finished = True
-            return
+        # simulate beep
+        for crew in self.crewmates:
+            dist = self._getManhattanDistance(self.bot.pos, crew.pos)
+            a = self.config["a"]
+            p = math.exp(-a * (dist - 1))
+            if random.random() < p:
+                self.bot.receivedBeep = True
+
+        # simulate sensor
+        for alien in self.aliens:
+            if self._isWithinSensorRange(self.bot.pos, alien.pos):
+                self.bot.alienDetected = True
 
         # update the bot
-        self.bot.computeNextStep(self.ship)
+        botX, botY = self.bot.computeNextStep(self.ship)
         
         # determine if the bot is on an alien
-        if self.ship.board[self.bot.pos[0]][self.bot.pos[1]] == Node.ALIEN:
+        if self.ship.board[botX][botY] == Node.ALIEN:
             self.endRun(False)
             return
 
@@ -117,7 +131,7 @@ class Simulation:
             self.ship.board[newX][newY] = Node.ALIEN
         
         # determine if the bot is on an alien
-        if self.ship.board[self.bot.pos[0]][self.bot.pos[1]] == Node.ALIEN:
+        if self.ship.board[botX][botY] == Node.ALIEN:
             self.endRun(False)
             return
         
