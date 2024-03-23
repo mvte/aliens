@@ -40,13 +40,11 @@ class Simulation:
     
     # places the bot in a random open position on the ship
     def _placeBot(self, whichBot):
-        bot = botFactory(whichBot, self.ship)
-
         x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
         while self.ship.board[x][y] == Node.CLOSED:
             x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
 
-        bot.pos = (x, y)
+        bot = botFactory(whichBot, self.ship, self.config["k"], (x, y), self.config["a"])
         self.bot = bot
 
 
@@ -66,21 +64,12 @@ class Simulation:
 
         for i in range(numAliens):
             x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-            while self.ship.board[x][y] == Node.CLOSED or self._isWithinSensorRange(botPos, (x, y)):
+            while self.ship.board[x][y] == Node.CLOSED or self.bot.isWithinSensorRange((x, y)):
                 x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
 
             self.aliens.add(Alien((x, y)))
             self.ship.board[x][y] = Node.ALIEN
 
-
-    # determines if an alien is within a 2k+1 x 2k+1 square of the bot
-    def _isWithinSensorRange(self, botPos, alienPos):
-        k = self.config["k"]
-        botX, botY = botPos
-        alienX, alienY = alienPos
-
-        return abs(botX - alienX) <= k and abs(botY - alienY) <= k
-    
 
     def _getManhattanDistance(self, pos1, pos2):
         x1, y1 = pos1
@@ -102,7 +91,7 @@ class Simulation:
 
         # simulate sensor
         for alien in self.aliens:
-            if self._isWithinSensorRange(self.bot.pos, alien.pos):
+            if self.bot.isWithinSensorRange(alien.pos):
                 self.bot.alienDetected = True
 
         # update the bot
@@ -145,26 +134,3 @@ class Simulation:
         else:
             print("bot has been caught by an alien")
         
-
-
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
