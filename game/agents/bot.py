@@ -1,8 +1,9 @@
 import math
+import heapq
 
 class Bot:
     pos = None
-    alienDetected = False
+    receivedSensor = False
     receivedBeep = False
     k = None
     a = None
@@ -22,9 +23,5 @@ class Bot:
         dist = abs(x - i) + abs(y - j)
 
         return math.exp(-a * (dist - 1))
-    
-    # determines the probability that we receive a beep given that the crewmate is not in the cell (i, j)
-
-
         
 
