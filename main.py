@@ -12,7 +12,7 @@ def main():
     visual = None
     if len(sys.argv) > 1 and sys.argv[1] == "visualize":
         visual = Visual(game)
-        config["concurrentSims"] = 1
+        config["suite"] = 0
 
     while True:
         game.update()

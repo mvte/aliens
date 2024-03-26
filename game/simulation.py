@@ -7,68 +7,54 @@ import random
 
 class Simulation:
     # set of aliens
-    aliens = set()
+    aliens = None
     # set of crewmates
-    crewmates = set()
+    crewmates = None
 
     ship = None
     bot = None
     config = None
     finished = False
+    positions = {}
+    whichBot = None
 
-    # step limiter
-    steps = 0
-    MAX_STEPS = 1000
+    # state
+    currentIteration = 0
+    positionsIndex = 0
 
     # stats
     successes = 0
     failures = 0
 
-    def __init__(self, config):
+    def __init__(self, config, ship, positions, whichBot):
         self.config = config
-        self.ship = Ship(config["dim"])
-        
-        # place bot
-        self._placeBot(config["bot"])
+        self.ship = ship
+        self.positions = positions
+        self.whichBot = whichBot
+        self.aliens = set()
+        self.crewmates = set()
 
-        # place crewmates
-        self._placeCrewmates(config["crewmates"])
-
-        # place aliens
-        self._placeAliens(config["aliens"])
-
+        # place the bot, crewmates, and aliens for first set of iterations
+        self._placeBot(whichBot, positions["bot"][0])
+        self._placeCrewmates(positions["crewmates"][0])
+        self._placeAliens(positions["aliens"][0])
     
     # places the bot in a random open position on the ship
-    def _placeBot(self, whichBot):
-        x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-        while self.ship.board[x][y] == Node.CLOSED:
-            x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-
-        bot = botFactory(whichBot, self.ship, self.config["k"], (x, y), self.config["a"])
+    def _placeBot(self, whichBot, pos):
+        bot = botFactory(whichBot, self.ship, self.config["k"], pos, self.config["a"])
         self.bot = bot
 
 
     # places crewmates in random position that isn't the bot's position
-    def _placeCrewmates(self, numCrewmates):
-        for i in range(numCrewmates):
-            x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-            while self.ship.board[x][y] == Node.CLOSED or self.bot.pos == (x, y):
-                x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-
-            self.crewmates.add(Crewmate((x, y)))
+    def _placeCrewmates(self, crewmatePositions):
+        for pos in crewmatePositions:
+            self.crewmates.add(Crewmate(pos))
     
 
     # places aliens in random position that isn't within the bot's sensor range
-    def _placeAliens(self, numAliens):
-        botPos = self.bot.pos
-
-        for i in range(numAliens):
-            x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-            while self.ship.board[x][y] == Node.CLOSED or self.bot.isWithinSensorRange((x, y)):
-                x, y = random.randint(0, self.config["dim"] - 1), random.randint(0, self.config["dim"] - 1)
-
-            self.aliens.add(Alien((x, y)))
-            self.ship.board[x][y] = Node.ALIEN
+    def _placeAliens(self, alienPositions):
+        for pos in alienPositions:
+            self.aliens.add(Alien(pos))
 
 
     def _getManhattanDistance(self, pos1, pos2):
@@ -76,7 +62,7 @@ class Simulation:
         x2, y2 = pos2
         return abs(x1 - x2) + abs(y1 - y2)
 
-    # TODO: implement the simulation logic
+
     def step(self):
         if self.finished:
             return
@@ -92,20 +78,23 @@ class Simulation:
         # simulate sensor
         for alien in self.aliens:
             if self.bot.isWithinSensorRange(alien.pos):
-                self.bot.alienDetected = True
+                self.bot.receivedSensor = True
 
         # update the bot
         botX, botY = self.bot.computeNextStep(self.ship)
         
         # determine if the bot is on an alien
-        if self.ship.board[botX][botY] == Node.ALIEN:
-            self.endRun(False)
-            return
+        for alien in self.aliens:
+            if alien.pos == self.bot.pos:
+                self.endRun(False)
+                return
 
         # determine if the bot has found all the crewmates
+        toRemove = set()
         for crewmate in self.crewmates:
             if crewmate.pos == self.bot.pos:
-                self.crewmates.remove(crewmate)
+                toRemove.add(crewmate)
+        self.crewmates -= toRemove
         if not self.crewmates:
             self.endRun(True)
             return
@@ -114,23 +103,46 @@ class Simulation:
         randomizedAliens = list(self.aliens)
         random.shuffle(randomizedAliens)
         for alien in randomizedAliens:
-            oldX, oldY = alien.pos
             newX, newY = alien.computeNextStep(self.ship)
-            self.ship.board[oldX][oldY] = Node.OPEN
-            self.ship.board[newX][newY] = Node.ALIEN
         
         # determine if the bot is on an alien
-        if self.ship.board[botX][botY] == Node.ALIEN:
-            self.endRun(False)
-            return
-        
-        self.steps += 1
-
+        for alien in self.aliens:
+            if alien.pos == self.bot.pos:
+                self.endRun(False)
+                return
+    
 
     def endRun(self, success):
-        self.finished = True
         if success:
-            print("bot has found all crewmates")
+            self.successes += 1
         else:
-            print("bot has been caught by an alien")
+            self.failures += 1
+        
+        self.currentIteration += 1
+
+        # reset the bot, crewmates, and aliens
+        self.aliens = set()
+        self.crewmates = set()
+        self.bot = None
+
+        # if we've reached the end of the iterations, move to the next set of positions
+        if self.currentIteration == self.config["iterations"]:
+            self.currentIteration = 0
+            self.positionsIndex += 1
+        
+        # if we've reached the end of the positions, end the simulation
+        if self.positionsIndex == self.config["positions"]:
+            self.endSimulation()
+            return
+
+        self._placeBot(self.whichBot, self.positions["bot"][self.positionsIndex])
+        self._placeCrewmates(self.positions["crewmates"][self.positionsIndex])
+        self._placeAliens(self.posistions["aliens"][self.positionsIndex])
+
+
+    def endSimulation(self):
+        self.finished = True
+        print("simulation has ended")
+        print("successes: ", self.successes)
+        print("failures: ", self.failures)
         

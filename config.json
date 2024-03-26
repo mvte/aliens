@@ -1,10 +1,9 @@
 {
     "dim": 35,
-    "aliens": 1,
-    "crewmates": 1,
-    "bot": 1,
-    "sims": 1,
-    "concurrentSims": 1,
-    "k": 5,
-    "a": 0.1
+    "suite": 1,
+    "k": 7,
+    "a": 0.1,
+    "layouts": 10,
+    "positions": 10,
+    "iterations": 10
 }
