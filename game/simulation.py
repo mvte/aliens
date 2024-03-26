@@ -137,7 +137,7 @@ class Simulation:
 
         self._placeBot(self.whichBot, self.positions["bot"][self.positionsIndex])
         self._placeCrewmates(self.positions["crewmates"][self.positionsIndex])
-        self._placeAliens(self.posistions["aliens"][self.positionsIndex])
+        self._placeAliens(self.positions["aliens"][self.positionsIndex])
 
 
     def endSimulation(self):
