@@ -1,8 +1,15 @@
 - send bot beeps and sensor alerts per step (done)
-- finish implementation logic of bot 1
+- finish implementation logic of bot 1 (done)
     - use insights from class about temporal models and belief to find probability maps
-    - maybe consider a state based approach to the bot
-        - data collection (listen for beeps from various locations, consider "anchoring" to certain parts of the board)
-        - alien detected (evade)
-        - goto crewmate (high confidence in crewmate's position)
-- show probability maps for bots in visualization (another heatmap)
+    - update crewmate pbb (done)
+    - update alien pbb (done)
+- complete bot2
+    - local search + utility
+    - instead of nearest adjacent nodes, consider a set radius
+    - add preference for unexplored nodes, to encourage exploration
+- show probability maps for bots in visualization (another heatmap) (done)
+- refactor so that the ship consists only of open or closed nodes
+    - treat alien in the same way we treat the crewmember and the bot
+- test suite
+    - for each bot per comparison: 10 layouts x 10 different starting positions x 10 simulations
+    - i.e. each layout has 10 different starting positions that we run 10 times for each bot
