@@ -35,16 +35,26 @@ class Ship:
             dx, dy = dir
             if x + dx < 0 or x + dx >= len(self.board) or y + dy < 0 or y + dy >= len(self.board):
                 continue
-            if self.board[x + dx][y + dy] == Node.OPEN:
+            if self.board[x + dx][y + dy] != Node.CLOSED:
                 validMoves.append((x + dx, y + dy))
         return validMoves
     
+    # TODO: add check for other alien positions
+    def getValidAlienMoves(self, pos):
+        x, y = pos
+        dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        validMoves = []
+        for dir in dirs:
+            dx, dy = dir
+            if x + dx < 0 or x + dx >= len(self.board) or y + dy < 0 or y + dy >= len(self.board):
+                continue
+            if self.board[x + dx][y + dy] == Node.OPEN:
+                validMoves.append((x + dx, y + dy))
+        return validMoves
 
 class Node(Enum):
     OPEN = 1
     CLOSED = 2
-    ALIEN = 3
-    
 
 '''
 1. Choose a square at random
