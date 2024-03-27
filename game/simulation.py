@@ -21,16 +21,20 @@ class Simulation:
     # state
     currentIteration = 0
     positionsIndex = 0
+    time = 0
 
     # stats
     successes = 0
     failures = 0
+    movesToCrewmate = 0
+    crewmatesSaved = 0
 
     def __init__(self, config, ship, positions, whichBot):
         self.config = config
         self.ship = ship
         self.positions = positions
         self.whichBot = whichBot
+        self.time = 0
         self.aliens = set()
         self.crewmates = set()
 
@@ -94,6 +98,7 @@ class Simulation:
         for crewmate in self.crewmates:
             if crewmate.pos == self.bot.pos:
                 toRemove.add(crewmate)
+                self.crewmatesSaved += 1
         self.crewmates -= toRemove
         if not self.crewmates:
             self.endRun(True)
@@ -110,20 +115,23 @@ class Simulation:
             if alien.pos == self.bot.pos:
                 self.endRun(False)
                 return
+        
+        self.time += 1
     
 
     def endRun(self, success):
+        # update stats
         if success:
             self.successes += 1
+            self.movesToCrewmate += self.time
         else:
             self.failures += 1
         
+        # move to the next iteration
         self.currentIteration += 1
 
-        # reset the bot, crewmates, and aliens
-        self.aliens = set()
-        self.crewmates = set()
-        self.bot = None
+        # reset time
+        self.time = 0
 
         # if we've reached the end of the iterations, move to the next set of positions
         if self.currentIteration == self.config["iterations"]:
@@ -134,7 +142,11 @@ class Simulation:
         if self.positionsIndex == self.config["positions"]:
             self.endSimulation()
             return
-
+        
+        # reset the bot, crewmates, and aliens
+        self.aliens = set()
+        self.crewmates = set()
+        self.bot = None
         self._placeBot(self.whichBot, self.positions["bot"][self.positionsIndex])
         self._placeCrewmates(self.positions["crewmates"][self.positionsIndex])
         self._placeAliens(self.positions["aliens"][self.positionsIndex])
@@ -142,7 +154,10 @@ class Simulation:
 
     def endSimulation(self):
         self.finished = True
-        print("simulation has ended")
+        print("\nsimulation has ended")
+        print(self.bot.whichBot)
         print("successes: ", self.successes)
         print("failures: ", self.failures)
+        print("moves to crewmate: ", self.movesToCrewmate)
+        print("crewmates saved: ", self.crewmatesSaved)
         
