@@ -5,6 +5,7 @@ class Bot:
     pos = None
     receivedSensor = False
     receivedBeep = False
+    whichBot = None
     k = None
     a = None
 

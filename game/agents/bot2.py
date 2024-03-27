@@ -29,6 +29,7 @@ class Bot2(Bot):
     depth = 7
 
     def __init__(self, ship, k, pos, a):
+        self.whichBot = "bot2"
         self.time = 0
         self.pos = pos
         self.k = k

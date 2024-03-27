@@ -19,6 +19,7 @@ class Bot1(Bot):
     time = None
 
     def __init__(self, ship, k, pos, a):
+        self.whichBot = "bot1"
         self.time = 0
         self.pos = pos
         self.k = k
