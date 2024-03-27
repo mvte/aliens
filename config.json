@@ -1,7 +1,7 @@
 {
     "dim": 35,
     "suite": 1,
-    "k": 7,
+    "k": 10,
     "a": 0.1,
     "layouts": 10,
     "positions": 10,
