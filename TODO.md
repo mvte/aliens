@@ -13,8 +13,10 @@
 - test suite (done)
     - for each bot per comparison: 10 layouts x 10 different starting positions x 10 simulations
     - i.e. each layout has 10 different starting positions that we run 10 times for each bot
-- save data on finish
+- save data on finish (done)
     - average number of moves to rescue all crew members
     - probability of successfully avoiding the alien and rescuing the crew (failure/success rate)
     - average number of crew members saved
-    
+- we also want to run tests for various k and alpha, consider creating a framework for this
+    - k: [3, 7, 10]
+    - alpha: [0.01, 0.05, 0.1, 0.5, 1]
