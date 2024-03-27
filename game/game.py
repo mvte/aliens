@@ -2,6 +2,7 @@ from enum import Enum
 from .simulation import Simulation
 from .ship import Ship, Node
 import random
+import datetime
 
 '''
 Game class
@@ -37,14 +38,19 @@ class Game:
     suite = None
     sims = []
     ships = []
+    filename = None
 
     currentShip = 0
+
+    symbols = ['|', '/', '-', '\\']
+    i = 0
 
 
     def __init__(self, config):
         self.config = config
         self.suite = self.suiteLookup[config["suite"]]
         self.state = State.INITIALIZING
+        self.i = 0
         pass
         
 
@@ -72,6 +78,9 @@ class Game:
         print(self.config)
         print(self.suite)
 
+        # create file to store results
+        self._createFile()
+
         # generate ship layouts
         ships = []
         for i in range(self.config["layouts"]):
@@ -80,6 +89,22 @@ class Game:
 
         self.prepareSimulations()
         self.state = State.READY
+
+    
+    def _createFile(self):
+        # config section
+        configSection = ""
+        for key in self.config:
+            configSection += f"{key}:,{self.config[key]}\n"
+        configSection += "\n"
+    
+        # data section
+        date = datetime.datetime.now().strftime("%m.%d %H:%M")
+        self.filename = f"results/suite {self.config['suite']} results - {date}.csv"
+        dataHeader = "layout,bot,successes,failures,moves to crewmate,crewmates saved\n"
+        with open(self.filename, "w") as f:
+            f.write(configSection)
+            f.write(dataHeader)
 
 
     def prepareSimulations(self):
@@ -99,6 +124,9 @@ class Game:
 
 
     def _handle_running(self):
+        self.i = (self.i + 1) % len(self.symbols)
+        print(f'\r\033[K{self.symbols[self.i]} running...', flush=True, end='')
+
         finished = True
         for sim in self.sims:
             sim.step()
@@ -110,7 +138,13 @@ class Game:
 
     # transition to the next set of simulations
     def _handle_transition(self):
-        print("transitioning")
+        print("transitioning to next layout")
+
+        # write the data for the current set of simulations to the file
+        # layout, bot, successes, failures, moves to crewmate, crewmates saved
+        with open(self.filename, "a") as f:
+            for sim in self.sims:
+                f.write(f"{self.currentShip},{sim.bot.whichBot},{sim.successes},{sim.failures},{sim.movesToCrewmate},{sim.crewmatesSaved}\n")
 
         # move to the next ship layout, or end the game if we've reached the end
         self.currentShip += 1
