@@ -2,7 +2,7 @@
     "dim": 35,
     "suite": 1,
     "k": 10,
-    "a": 0.1,
+    "a": 0.01,
     "layouts": 10,
     "positions": 10,
     "iterations": 10
