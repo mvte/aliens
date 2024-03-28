@@ -2,7 +2,11 @@
     "dim": 35,
     "suite": 1,
     "k": 10,
+<<<<<<< Updated upstream
     "a": 0.05,
+=======
+    "a": 0.5,
+>>>>>>> Stashed changes
     "layouts": 10,
     "positions": 10,
     "iterations": 10
