@@ -23,7 +23,8 @@ class TwoCrewmate:
 
         # initialize the pbb map
         pbbMap = np.full((ship.dim, ship.dim, ship.dim, ship.dim), np.nan)
-        pbbMap[self.validMask] = 1/numOpen
+        # the pbbmap is symmetric
+        pbbMap[self.validMask] = 2/numOpen
         pbbMap[x, y, :, :] = 0
         pbbMap[:, :, x, y] = 0
 
@@ -86,7 +87,7 @@ class TwoCrewmate:
         dist_matrix = self.calcDistanceMatrix(x, y)
         p = self.pbbBeepGivenCrewmateInCell4d(dist_matrix)
 
-        return np.where(mask, p, 0)
+        return np.where(mask, p, np.nan)
     
 
     # calculate the distance matrix from the bot to each cell
@@ -97,11 +98,17 @@ class TwoCrewmate:
             self.distanceMatrixPos = (x, y)
         return self.distanceMatrix
     
-
-    # determines the probability that we receive a beep given that the crewmate is in the cell (i, j)
+    # returns a 4d map of the probability of a beep given that a crewmate is in a cell, given a distance matrix of the bot to each cell
+    # where p[i,j,k,l] = P(beep | C1 = (i,j), C2 = (k,l)) = 1 - (1 - exp(-a * (d - 1))) * (1 - exp(-a * (d' - 1)))
+    # where d is the distance from the bot to C1 and d' is the distance from the bot to C2
     def pbbBeepGivenCrewmateInCell4d(self, distMatrix):
         a = self.a
-        return np.exp(-a * (distMatrix - 1))
+
+        dist = distMatrix.reshape(distMatrix.shape[0], distMatrix.shape[1], 1, 1)
+        distPrime = distMatrix.reshape(1, 1, distMatrix.shape[0], distMatrix.shape[1])
+
+        p = 1 - (1 - np.exp(-a * (dist - 1))) * (1 - np.exp(-a * (distPrime - 1)))
+        return p
     
 
     # collapses the 4d map into a 2d map given that a crewmate has been found
