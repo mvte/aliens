@@ -4,11 +4,14 @@ import numpy as np
 class OneAlien:
     # initializes the probability map for the alien
     # everything outside the sensor range is equally likely
-    def __init__(self, ship, k, pos, a, map = None):
+    def __init__(self, ship, k, pos, a, map = None, twoAlienCase = False):
         self.k = k
         self.a = a
         self.ship = ship
         self.dim = ship.dim
+        
+        # if this engine is used for two aliens, then the update logic is a little bit different
+        self.twoAlienCase = twoAlienCase
 
         if map is not None:
             self.alienPbbMap = map
@@ -78,13 +81,14 @@ class OneAlien:
         newBlf[~self.validMask] = np.nan
 
         # apply the correct sensor mask
-        if bot.receivedSensor:
+        if bot.receivedSensor and not self.twoAlienCase:
             # zero out the probabilities outside the sensor range
             sensorMask = self.validMask & (~self.sensorMask(bot.pos))
-        else:
+            newBlf[sensorMask] = 0
+        elif not bot.receivedSensor or self.twoAlienCase:
             # zero out the probabilities inside the sensor range
             sensorMask = self.validMask & self.sensorMask(bot.pos)
-        newBlf[sensorMask] = 0
+            newBlf[sensorMask] = 0
 
         # normalize
         newBlf /= np.nansum(newBlf)
