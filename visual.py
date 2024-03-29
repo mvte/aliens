@@ -9,8 +9,19 @@ from game.game import State
 displays the game state
 '''
 class Visual:
+    oneCrewmateLogic = ["bot1", "bot2", "bot3", "bot6"]
+    twoCrewmateLogic = ["bot4", "bot5"]
+
+    oneAlienLogic = ["bot1", "bot2", "bot3", "bot4", "bot5", "bot6"]
+    
+    
+    onlyOneGraph = False
+
     def __init__(self, game):
-        self.fig, self.ax = plt.subplots(ncols = 3)
+        if not self.onlyOneGraph:
+            self.fig, self.ax = plt.subplots(ncols = 3)
+        else:   
+            self.fig, self.ax = plt.subplots(ncols = 1)
         self.game = game
 
 
@@ -18,39 +29,60 @@ class Visual:
         if self.game.state != State.RUNNING:
             return
 
-        self.ax[0].clear()
-        self.ax[1].clear()
-        self.ax[2].clear()
+        if not self.onlyOneGraph:
+            ax = self.ax[0]
+            self.ax[1].clear()
+            self.ax[2].clear()
+        else:
+            ax = self.ax
+        ax.clear()
+
         remapped = self._remap(self.game.sims[0].ship.board)
 
         sim = sns.heatmap(
             remapped, 
-            ax=self.ax[0], 
+            ax=ax, 
             vmax=5,
             cbar=False, 
             square=True, 
             xticklabels=False,
             yticklabels=False,
         )
-        crewPbb = sns.heatmap(
-            self.game.sims[0].bot.crewmatePbbMap,
-            ax=self.ax[1], 
-            cmap = "rocket_r",
-            cbar=False,
-            square=True, 
-            xticklabels=False,
-            yticklabels=False,
-        )
-        
-        alienPbb = sns.heatmap(
-            self.game.sims[0].bot.alienPbbMap,
-            ax=self.ax[2], 
-            cmap = "rocket_r",
-            cbar=False,
-            square=True, 
-            xticklabels=False,
-            yticklabels=False,
-        )
+
+        if not self.onlyOneGraph:
+            if hasattr(self.game.sims[0].bot, "cpe"):
+                if self.game.sims[0].bot.whichBot in self.oneCrewmateLogic:
+                    crewmatePbbMap = self.game.sims[0].bot.cpe.crewmatePbbMap
+                else:
+                    crewmatePbbMap = self.game.sims[0].bot.cpe.getUtilityMap()
+                
+                if self.game.sims[0].bot.whichBot in self.oneAlienLogic:
+                    alienPbbMap = self.game.sims[0].bot.ape.alienPbbMap
+                else:
+                    # todo
+                    alienPbbMap = self.game.sims[0].bot.ape.alienPbbMap
+            else:
+                crewmatePbbMap = self.game.sims[0].bot.crewmatePbbMap
+                alienPbbMap = self.game.sims[0].bot.alienPbbMap
+
+            crewPbb = sns.heatmap(
+                crewmatePbbMap,
+                ax=self.ax[1], 
+                cmap = "rocket_r",
+                cbar=False,
+                square=True, 
+                xticklabels=False,
+                yticklabels=False,
+            )
+            alienPbb = sns.heatmap(
+                alienPbbMap,
+                ax=self.ax[2], 
+                cmap = "rocket_r",
+                cbar=False,
+                square=True, 
+                xticklabels=False,
+                yticklabels=False,
+            )
 
         self.fig.canvas.draw()
 
