@@ -3,6 +3,8 @@ from game.agents.bot2 import Bot2
 from game.agents.bot3 import Bot3
 from game.agents.bot4 import Bot4
 from game.agents.bot5 import Bot5
+from game.agents.bot6 import Bot6
+from game.agents.bot7 import Bot7
 
 def botFactory(which, ship, k, pos, a):
     match which:
@@ -16,5 +18,9 @@ def botFactory(which, ship, k, pos, a):
             return Bot4(ship, k, pos, a)
         case 5:
             return Bot5(ship, k, pos, a)
+        case 6:
+            return Bot6(ship, k, pos, a)
+        case 7:
+            return Bot7(ship, k, pos, a)
         case _:
             return None
