@@ -99,6 +99,7 @@ class Simulation:
             if crewmate.pos == self.bot.pos:
                 toRemove.add(crewmate)
                 self.crewmatesSaved += 1
+                self.bot.foundCrewmate = True
         self.crewmates -= toRemove
         if not self.crewmates:
             self.endRun(True)
