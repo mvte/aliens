@@ -13,6 +13,7 @@ class Visual:
     twoCrewmateLogic = ["bot4", "bot5"]
 
     oneAlienLogic = ["bot1", "bot2", "bot3", "bot4", "bot5", "bot6"]
+    twoAlienLogic = ["bot7", "bot8"]
     
     
     onlyOneGraph = False
@@ -58,9 +59,8 @@ class Visual:
                 
                 if self.game.sims[0].bot.whichBot in self.oneAlienLogic:
                     alienPbbMap = self.game.sims[0].bot.ape.alienPbbMap
-                else:
-                    # todo
-                    alienPbbMap = self.game.sims[0].bot.ape.alienPbbMap
+                else: 
+                    alienPbbMap = self.game.sims[0].bot.ape.getUtilityMap()
             else:
                 crewmatePbbMap = self.game.sims[0].bot.crewmatePbbMap
                 alienPbbMap = self.game.sims[0].bot.alienPbbMap
