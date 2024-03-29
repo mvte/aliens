@@ -94,7 +94,7 @@ class Game:
     def _createFile(self):    
         # data section
         date = datetime.datetime.now().strftime("%m.%d %H.%M")
-        self.filename = f"results/suite{self.config['suite']}/ s{self.config['suite']}k{self.config["k"]}a{self.config["a"]} - {date}.csv"
+        self.filename = f"results/suite{self.config['suite']}/ s{self.config['suite']}k{self.config['k']}a{self.config['a']} - {date}.csv"
         dataHeader = "layout,bot,successes,failures,moves to crewmate,crewmates saved\n"
         with open(self.filename, "w") as f:
             f.write(dataHeader)
