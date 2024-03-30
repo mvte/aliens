@@ -1,6 +1,8 @@
 import numpy as np
 import random
 from game.ship import Node
+import time
+from numba import njit
 
 class TwoAlien:
     def __init__(self, ship, k, pos, a):
@@ -25,8 +27,13 @@ class TwoAlien:
 
         self.alienPbbMap = pbbMap
 
+        self.precompute(ship)
+            
+    # precomputes a bunch of things for the probability map
+    def precompute(self, ship):
         # precompute the number of valid moves for each cell
         twoDimMask = np.array(ship.board) == Node.OPEN
+        self.twoDimMask = twoDimMask
         self.numNeighbors = np.full((self.dim, self.dim), 0)
         for i in range(self.dim):
             for j in range(self.dim):
@@ -34,6 +41,38 @@ class TwoAlien:
                     continue
                 self.numNeighbors[i, j] = len(self.ship.getValidMoves((i, j)))
         self.numNeighbors[~twoDimMask] = -1
+
+        # precompute shifted neighbors
+        self.shiftedNeighbors = {}
+        for dir in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            self.shiftedNeighbors[dir] = np.roll(self.numNeighbors, dir, axis=(0, 1))
+
+        # mask over the edges
+        self.shiftedNeighbors[(0, 1)][:, 0] = -1
+        self.shiftedNeighbors[(0, -1)][:, -1] = -1
+        self.shiftedNeighbors[(1, 0)][0, :] = -1
+        self.shiftedNeighbors[(-1, 0)][-1, :] = -1
+
+        # precompute their products
+        self.shiftedNbProducts = {}
+        for dir1 in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+            for dir2 in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                self.shiftedNbProducts[(dir1, dir2)] = self.shiftedNeighbors[dir1][:, :, np.newaxis, np.newaxis] * self.shiftedNeighbors[dir2][np.newaxis, np.newaxis, :, :]
+
+        # precompute padding for the blf map
+        self.padSizesLeft = {
+            (0, 1): ((0, 0), (1, 0), (0, 0), (0, 0)),
+            (0, -1): ((0, 0), (0, 1), (0, 0), (0, 0)),
+            (1, 0): ((1, 0), (0, 0), (0, 0), (0, 0)),
+            (-1, 0): ((0, 1), (0, 0), (0, 0), (0, 0)),
+        }
+
+        self.padSizesRight = {
+            (0, 1): ((0, 0), (0, 0), (0, 0), (1, 0)),
+            (0, -1): ((0, 0), (0, 0), (0, 0), (0, 1)),
+            (1, 0): ((0, 0), (0, 0), (1, 0), (0, 0)),
+            (-1, 0): ((0, 0), (0, 0), (0, 1), (0, 0)),
+        }
 
 
     # 4 dimensional sensor mask
@@ -54,42 +93,31 @@ class TwoAlien:
         dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for dir1 in dirs:
             for dir2 in dirs:
-                # shift both belief neighbor naps in the same direction for each alien
-                shiftedBlf = np.roll(self.alienPbbMap, dir1, axis=(0, 1))
-                shiftedBlf = np.roll(shiftedBlf, dir2, axis=(2, 3))
-                shiftedBlf = np.nan_to_num(shiftedBlf, nan=0)
-                shiftedNb1 = np.roll(self.numNeighbors, dir1, axis=(0, 1))
-                shiftedNb2 = np.roll(self.numNeighbors, dir2, axis=(0, 1))
+                # pad the array with zeros
+                paddedBlf = np.pad(self.alienPbbMap, self.padSizesLeft[dir1], mode='constant', constant_values=0)
+                paddedBlf = np.pad(paddedBlf, self.padSizesRight[dir2], mode='constant', constant_values=0)
 
-                # mask the rolled over edges for alien 1
+                # slice the array to shift it
                 if dir1 == (0, 1):
-                    shiftedBlf[:, 0, :, ] = 0
-                    shiftedNb1[:, 0] = -1
+                    shiftedBlf = paddedBlf[:, :-1, :, :]
                 elif dir1 == (0, -1):
-                    shiftedBlf[:, -1, :, ] = 0
-                    shiftedNb1[:, -1] = -1
+                    shiftedBlf = paddedBlf[:, 1:, :, :]
                 elif dir1 == (1, 0):
-                    shiftedBlf[0, :, :, ] = 0
-                    shiftedNb1[0, :] = -1
+                    shiftedBlf = paddedBlf[:-1, :, :, :]
                 elif dir1 == (-1, 0):
-                    shiftedBlf[-1, :, :, ] = 0
-                    shiftedNb1[-1, :] = -1
-                
-                # mask the rolled over edges for alien 2
+                    shiftedBlf = paddedBlf[1:, :, :, :]
+
                 if dir2 == (0, 1):
-                    shiftedBlf[:, :, :, 0] = 0
-                    shiftedNb2[:, 0] = -1
+                    shiftedBlf = shiftedBlf[:, :, :, :-1]
                 elif dir2 == (0, -1):
-                    shiftedBlf[:, :, :, -1] = 0
-                    shiftedNb2[:, -1] = -1
+                    shiftedBlf = shiftedBlf[:, :, :, 1:]
                 elif dir2 == (1, 0):
-                    shiftedBlf[:, :, 0, :] = 0
-                    shiftedNb2[0, :] = -1
+                    shiftedBlf = shiftedBlf[:, :, :-1, :]
                 elif dir2 == (-1, 0):
-                    shiftedBlf[:, :, -1, :] = 0
-                    shiftedNb2[-1, :] = -1
-                
-                newBlf = newBlf + shiftedBlf / (shiftedNb1[:, :, np.newaxis, np.newaxis] * shiftedNb2[np.newaxis, np.newaxis, :, :])
+                    shiftedBlf = shiftedBlf[:, :, 1:, :]
+
+                shiftedBlf = np.nan_to_num(shiftedBlf)
+                newBlf = newBlf + shiftedBlf / self.shiftedNbProducts[(dir1, dir2)]
 
         # apply the valid mask
         newBlf[~self.validMask] = np.nan
@@ -112,11 +140,9 @@ class TwoAlien:
         p_a2 = np.nansum(self.alienPbbMap, axis=(0, 1))
         p_a1_or_a2 = p_a1 + p_a2
 
-        twoDimValidMask = np.array(self.ship.board) == Node.OPEN
-        p_a1_or_a2[~twoDimValidMask] = np.nan
+        p_a1_or_a2[~self.twoDimMask] = np.nan
 
         return p_a1_or_a2
     
-
 
     
