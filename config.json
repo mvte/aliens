@@ -1,9 +1,18 @@
 {
     "dim": 35,
+<<<<<<< HEAD
     "suite": 0,
     "k": 7,
     "a": 0.1,
     "layouts": 4,
     "positions": 2,
     "iterations": 2
+=======
+    "suite": 2,
+    "k": 10,
+    "a": 1,
+    "layouts": 10,
+    "positions": 10,
+    "iterations": 10
+>>>>>>> aab430f (s2 data)
 }
