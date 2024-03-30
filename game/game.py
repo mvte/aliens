@@ -12,9 +12,9 @@ class Game:
     # suite 0 is the test suite
     suiteLookup = {
         0: {
-            "bots": [4, 5],
+            "bots": [7],
             "crewmates": 2,
-            "aliens": 1,
+            "aliens": 2,
         },
         1: {
             "bots": [1, 2],
