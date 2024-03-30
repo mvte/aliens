@@ -39,15 +39,11 @@ class Bot7(Bot):
             self.cpe = oc.OneCrewmate(ship, self.k, self.pos, self.a, collapsedMap)
 
         # update crewmate probabilities
-        t0 = time.time()
         self.cpe.updateCrewmatePbbMap(self)
-        print("crew update time: ", time.time() - t0)
         
         # update alien probabilities
-        t1 = time.time()
         self.ape.updateAlienPbbMap(self)
         self.alienPbbMap = self.ape.getUtilityMap()
-        print("alien update time: ", time.time() - t1)
 
         # select the closest target
         target = self.cpe.getTarget(self.pos)
