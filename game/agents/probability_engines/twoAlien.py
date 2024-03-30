@@ -89,12 +89,13 @@ class TwoAlien:
     # update the probability map
     def updateAlienPbbMap(self, bot):
         newBlf = np.zeros((self.dim, self.dim, self.dim, self.dim))
+        noNanPbbMap = np.nan_to_num(self.alienPbbMap)
 
         dirs = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for dir1 in dirs:
             for dir2 in dirs:
                 # pad the array with zeros
-                paddedBlf = np.pad(self.alienPbbMap, self.padSizesLeft[dir1], mode='constant', constant_values=0)
+                paddedBlf = np.pad(noNanPbbMap, self.padSizesLeft[dir1], mode='constant', constant_values=0)
                 paddedBlf = np.pad(paddedBlf, self.padSizesRight[dir2], mode='constant', constant_values=0)
 
                 # slice the array to shift it
@@ -116,7 +117,6 @@ class TwoAlien:
                 elif dir2 == (-1, 0):
                     shiftedBlf = shiftedBlf[:, :, 1:, :]
 
-                shiftedBlf = np.nan_to_num(shiftedBlf)
                 newBlf = newBlf + shiftedBlf / self.shiftedNbProducts[(dir1, dir2)]
 
         # apply the valid mask
