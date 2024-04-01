@@ -1,9 +1,12 @@
 {
     "dim": 35,
-    "suite": 3,
+    "suite": 0,
     "k": 7,
     "a": 0.1,
     "layouts": 4,
     "positions": 2,
-    "iterations": 2
+    "iterations": 2,
+    "test_aliens": 1,
+    "test_crewmates": 2,
+    "test_bot": 4
 }

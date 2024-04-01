@@ -12,9 +12,9 @@ class Game:
     # suite 0 is the test suite
     suiteLookup = {
         0: {
-            "bots": [8],
+            "bots": [5],
             "crewmates": 2,
-            "aliens": 2,
+            "aliens": 1,
         },
         1: {
             "bots": [1, 2],
@@ -49,6 +49,11 @@ class Game:
     def __init__(self, config):
         self.config = config
         self.suite = self.suiteLookup[config["suite"]]
+        if config["suite"] == 0:
+            self.suite["crewmates"] = self.config["test_crewmates"]
+            self.suite["aliens"] = self.config["test_aliens"]
+            self.suite["bots"] = [self.config["test_bot"]]
+
         self.state = State.INITIALIZING
         self.i = 0
         pass
